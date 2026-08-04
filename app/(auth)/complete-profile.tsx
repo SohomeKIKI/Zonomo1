@@ -92,7 +92,7 @@ export default function CompleteProfileScreen() {
           <MaterialIcons name="arrow-back" size={24} color="#0A1C3B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Complete Profile</Text>
-        <View style={{ width: 24 }} /> {/* Spacer for centering */}
+        <View style={{ width: 24 }} />
       </View>
 
       <KeyboardAvoidingView 

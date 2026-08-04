@@ -10,9 +10,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '../store/authStore';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // Keep the native splash screen visible while we render our custom animated one
 SplashScreen.preventAutoHideAsync();
+
+// Configure Google Sign-In safely (prevents instant crash in Expo Go)
+try {
+  GoogleSignin.configure({
+    webClientId: '3465385813-36f6ur9geoqsslb28e4p5k08couk94v6.apps.googleusercontent.com',
+  });
+} catch (e) {
+  console.log('GoogleSignin failed to configure (expected if running in Expo Go without native modules)');
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,11 +20,25 @@ export default function LoginScreen() {
     });
   };
 
-  const handleGoogleLogin = () => {
-    // Simulate google login -> then checking if user exists
-    // For now, let's just go straight to complete profile to test the UI
-    console.log('Google Auth Triggered');
-    router.push('/(auth)/complete-profile');
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log('Google Auth Success:', userInfo);
+      
+      // Proceed to complete-profile (in a real app, send token to backend first)
+      router.push('/(auth)/complete-profile');
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log('User cancelled the login flow');
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log('Sign in is in progress already');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log('Play services not available or outdated');
+      } else {
+        console.log('Some other error happened:', error);
+      }
+    }
   };
 
   return (
