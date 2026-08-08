@@ -10,16 +10,20 @@ import {
   ScrollView,
   PlatformColor
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons, FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAuthStore } from '../../store/authStore';
 
 type Gender = 'Male' | 'Female' | 'Other' | null;
 
 export default function CompleteProfileScreen() {
   const router = useRouter();
+  const { phone, role } = useLocalSearchParams<{phone: string, role: string}>();
+  const updateUser = useAuthStore(state => state.updateUser);
+  
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState<Gender>(null);
@@ -75,8 +79,13 @@ export default function CompleteProfileScreen() {
     }
     
     // In a real app, you would send this to the backend to create the profile.
-    // For now, we will navigate to the customer tabs or wherever appropriate.
     console.log('Profile saved:', { fullName, email, gender, dateOfBirth });
+    
+    // Update the local authStore with the new user details
+    updateUser({
+      fullName: fullName.trim() || 'Guest User',
+      email: email.trim() || 'guest@example.com'
+    });
     
     // Navigate to the success screen
     router.replace('/(auth)/account-ready');

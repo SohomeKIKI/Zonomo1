@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 export default function ProviderLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)/index" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }
