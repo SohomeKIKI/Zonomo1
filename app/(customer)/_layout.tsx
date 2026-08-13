@@ -4,7 +4,7 @@ export default function CustomerLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="category/[id]" options={{ title: 'Category Details', headerShown: true }} />
+      <Stack.Screen name="category/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="profile/personal-info" options={{ title: 'Personal Information', headerShown: true }} />
       <Stack.Screen name="profile/addresses" options={{ title: 'Saved Addresses', headerShown: true }} />
       <Stack.Screen name="profile/payment" options={{ title: 'Payment Methods', headerShown: true }} />

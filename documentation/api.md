@@ -173,3 +173,222 @@ Called on the "Waiting for Approval" screen to check if an admin has approved th
     "status": "in_review" // Can be "in_review", "approved", or "rejected"
   }
   ```
+
+---
+
+## 4. Home & Discovery (Customer)
+
+### 4.1 Get Categories
+Fetch the list of all available service categories (e.g., Electrician, Plumber).
+
+- **Endpoint:** `GET /categories`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "cat_1",
+      "name": "Electrician",
+      "icon": "zap"
+    }
+  ]
+  ```
+
+### 4.2 Get Providers by Category
+Fetch the list of professionals available for a specific category.
+
+- **Endpoint:** `GET /categories/{id}/providers`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "p_123",
+      "name": "Rajesh Kumar",
+      "rating": 4.8,
+      "distance": "2.5 km away",
+      "hourlyRate": 250
+    }
+  ]
+  ```
+
+### 4.3 Get Provider Details
+Fetch details for a specific provider.
+
+- **Endpoint:** `GET /providers/{id}`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  {
+    "id": "p_123",
+    "name": "Rajesh Kumar",
+    "rating": 4.8,
+    "reviews": 120,
+    "about": "Expert electrician with 10 years experience."
+  }
+  ```
+
+---
+
+## 5. Bookings & Requests
+
+### 5.1 Create Booking
+Customer requests a service.
+
+- **Endpoint:** `POST /bookings`
+- **Protected:** Yes
+- **Request Body:**
+  ```json
+  {
+    "providerId": "p_123",
+    "categoryId": "cat_1",
+    "date": "2023-11-20T10:00:00Z",
+    "addressId": "addr_1"
+  }
+  ```
+- **Expected Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "bookingId": "b_123"
+  }
+  ```
+
+### 5.2 Get Customer Bookings
+Customer views their booking history.
+
+- **Endpoint:** `GET /bookings`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "b_123",
+      "status": "pending",
+      "date": "2023-11-20T10:00:00Z",
+      "providerName": "Rajesh Kumar"
+    }
+  ]
+  ```
+
+### 5.3 Get Provider Requests
+Provider views incoming job requests.
+
+- **Endpoint:** `GET /provider/requests`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "req_1",
+      "customerName": "John Doe",
+      "date": "2023-11-20T10:00:00Z",
+      "status": "pending"
+    }
+  ]
+  ```
+
+### 5.4 Update Request Status (Accept/Reject)
+Provider accepts or rejects a request.
+
+- **Endpoint:** `PATCH /provider/requests/{id}/status`
+- **Protected:** Yes
+- **Request Body:**
+  ```json
+  {
+    "status": "accepted" // or "rejected"
+  }
+  ```
+- **Expected Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "status": "accepted"
+  }
+  ```
+
+---
+
+## 6. Chat & Messaging
+
+### 6.1 Get Recent Chats
+Get the list of recent conversations.
+
+- **Endpoint:** `GET /chats`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "chatId": "chat_1",
+      "participantName": "Rajesh Kumar",
+      "lastMessage": "I will be there in 10 mins",
+      "timestamp": "2023-11-20T09:50:00Z"
+    }
+  ]
+  ```
+
+### 6.2 Get Chat Messages
+Get messages for a specific chat.
+
+- **Endpoint:** `GET /chats/{id}/messages`
+- **Protected:** Yes
+- **Expected Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "msg_1",
+      "senderId": "user_123",
+      "text": "Hello, are you available?",
+      "timestamp": "2023-11-20T09:40:00Z"
+    }
+  ]
+  ```
+
+### 6.3 Send Message
+Send a message in a chat. (Consider WebSockets for real-time).
+
+- **Endpoint:** `POST /chats/{id}/messages`
+- **Protected:** Yes
+- **Request Body:**
+  ```json
+  {
+    "text": "Yes, I am available."
+  }
+  ```
+- **Expected Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": {
+      "id": "msg_2",
+      "senderId": "p_123",
+      "text": "Yes, I am available.",
+      "timestamp": "2023-11-20T09:42:00Z"
+    }
+  }
+  ```
+
+---
+
+## 7. Additional Profile & Settings
+
+### 7.1 Manage Addresses
+Get and add saved addresses.
+
+- **Endpoint:** `GET /profile/addresses`
+- **Endpoint:** `POST /profile/addresses`
+- **Protected:** Yes
+
+### 7.2 Manage Payments
+Get and add payment methods.
+
+- **Endpoint:** `GET /profile/payments`
+- **Endpoint:** `POST /profile/payments`
+- **Protected:** Yes
+
+### 7.3 Get Notifications
+Get user notifications.
+
+- **Endpoint:** `GET /notifications`
+- **Protected:** Yes
