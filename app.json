@@ -4,7 +4,7 @@
     "slug": "Zonomo1",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/LOGO.png",
+    "icon": "./assets/images/Z.png",
     "scheme": "zonomo1",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -16,9 +16,9 @@
       "package": "com.zonomo.zonomo1",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/LOGO.png",
-        "backgroundImage": "./assets/images/LOGO.png",
-        "monochromeImage": "./assets/images/LOGO.png"
+        "foregroundImage": "./assets/images/Z.png",
+        "backgroundImage": "./assets/images/Z.png",
+        "monochromeImage": "./assets/images/Z.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -33,7 +33,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/LOGO.png",
+          "image": "./assets/images/Z.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

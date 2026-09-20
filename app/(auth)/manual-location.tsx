@@ -42,7 +42,8 @@ export default function ManualLocationScreen() {
           <Feather name="arrow-left" size={24} color="#0A1C3B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Select Address</Text>
-        <View style={{ width: 24 }} /> {/* Spacer */}
+        <View style={{ width: 24 }} />
+        {/* Spacer */}
       </View>
 
       <View style={styles.content}>

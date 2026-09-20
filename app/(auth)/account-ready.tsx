@@ -5,10 +5,16 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 
+import { useAuthStore } from '../../store/authStore';
+
 export default function AccountReadyScreen() {
   const router = useRouter();
+  const login = useAuthStore(state => state.login);
+  const user = useAuthStore(state => state.user);
 
   const handleContinue = () => {
+    // Set authentication state. The user object is already in the store via updateUser.
+    login('mock-token', 'customer', user || undefined);
     // Navigate to the main customer interface
     router.replace('/(customer)/(tabs)');
   };

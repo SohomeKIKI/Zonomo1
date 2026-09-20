@@ -98,7 +98,11 @@ export default function ProviderStep3Screen() {
         {/* Dashboard Button */}
         <TouchableOpacity 
           style={styles.dashboardBtn}
-          onPress={() => router.replace('/(provider)/(tabs)')}
+          onPress={() => {
+            const useAuthStore = require('../../store/authStore').useAuthStore;
+            useAuthStore.getState().login('mock-token', 'provider');
+            router.replace('/(provider)/(tabs)');
+          }}
         >
           <Text style={styles.dashboardBtnText}>Go to Dashboard</Text>
           <MaterialIcons name="dashboard" size={18} color="#FFFFFF" />
