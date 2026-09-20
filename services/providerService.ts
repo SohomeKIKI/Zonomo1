@@ -4,7 +4,15 @@ export const providerService = {
   /**
    * Step 1: Save basic business details
    */
-  saveStep1: async (data: { businessName: string; serviceCategory: string; zipCode: string; radiusKm: number }) => {
+  saveStep1: async (data: { 
+    businessName: string; 
+    serviceCategory: string; 
+    zipCode: string; 
+    radiusKm: number;
+    jobDescription?: string;
+    languagesSpoken?: string[];
+    specialties?: string[];
+  }) => {
     // NOTE: Uncomment when backend is ready
     // const response = await api.post('/provider/profile/step1', data);
     // return response.data;

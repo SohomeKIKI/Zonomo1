@@ -1,18 +1,19 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { useAuthStore } from '../../store/authStore';
-
+import { useAuthStore } from '../../store/useAuthStore';
+import { authService } from '../../services/authService';
 export default function VerifyOtpScreen() {
   const router = useRouter();
-  const { phone, role } = useLocalSearchParams<{ phone: string; role: string }>();
+  const { phone, role, token } = useLocalSearchParams<{ phone: string; role: string; token: string }>();
   const [code, setCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<TextInput>(null);
   
-  const login = useAuthStore((state) => state.login);
+  const setAuthData = useAuthStore((state) => state.setAuthData);
 
   // Focus input automatically on mount
   useEffect(() => {
@@ -21,32 +22,38 @@ export default function VerifyOtpScreen() {
     }, 500);
   }, []);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (code.length < 6) return;
     
-    // MOCK LOGIC: 
-    // If code is '111111', pretend it's a new user and go to register
-    // Otherwise, log them in as a returning user
-    if (code === '111111') {
-      if (role === 'provider') {
-        router.push({
-          pathname: '/(auth)/provider-complete-profile',
-          params: { phone, role }
-        });
-      } else {
-        router.push({
-          pathname: '/(auth)/complete-profile',
-          params: { phone, role }
-        });
+    try {
+      setIsLoading(true);
+      const res = await authService.verifyOtp(phone, code, token);
+      
+      if (res && res.success && res.accessToken) {
+        setAuthData(res.accessToken, res.refreshToken, res.user, (role as any) || 'customer', false);
+        
+        if (!res.isProfileCompleted) {
+           router.push({
+             pathname: '/(auth)/complete-profile',
+             params: { 
+               name: res.user?.name || '',
+               email: res.user?.email || '',
+               dateOfBirth: res.user?.dateOfBirth || '',
+               gender: res.user?.gender || ''
+             }
+           });
+        } else {
+           if (role === 'provider') {
+             router.replace('/(provider)/(tabs)');
+           } else {
+             router.replace('/(customer)/(tabs)');
+           }
+        }
       }
-    } else {
-      // Login as returning user
-      login('dummy_token_123', (role as 'customer' | 'provider') || 'customer');
-      if (role === 'provider') {
-        router.replace('/(provider)/(tabs)');
-      } else {
-        router.replace('/(customer)/(tabs)');
-      }
+    } catch (e: any) {
+      Alert.alert("Error", e.response?.data?.message || "Invalid OTP");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -122,12 +129,18 @@ export default function VerifyOtpScreen() {
             </View>
 
             <TouchableOpacity 
-              style={[styles.primaryBtn, code.length < 6 && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, (code.length < 6 || isLoading) && styles.primaryBtnDisabled]}
               onPress={handleVerify}
-              disabled={code.length < 6}
+              disabled={code.length < 6 || isLoading}
             >
-              <Text style={styles.primaryBtnText}>Verify & Continue</Text>
-              <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <Text style={styles.primaryBtnText}>Verify & Continue</Text>
+                  <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>

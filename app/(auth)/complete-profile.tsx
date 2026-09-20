@@ -15,25 +15,37 @@ import { MaterialIcons, FontAwesome5, Ionicons, MaterialCommunityIcons } from '@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { authService } from '../../services/authService';
+import { customerService } from '../../services/customerService';
+import { ActivityIndicator, Alert } from 'react-native';
 
 type Gender = 'Male' | 'Female' | 'Other' | null;
 
 export default function CompleteProfileScreen() {
   const router = useRouter();
-  const { phone, role } = useLocalSearchParams<{phone: string, role: string}>();
+  const params = useLocalSearchParams<{
+    phone?: string, 
+    role?: string, 
+    name?: string, 
+    email?: string, 
+    dateOfBirth?: string, 
+    gender?: string
+  }>();
+  
   const updateUser = useAuthStore(state => state.updateUser);
   
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [gender, setGender] = useState<Gender>(null);
+  const [fullName, setFullName] = useState(params.name || '');
+  const [email, setEmail] = useState(params.email || '');
+  const [gender, setGender] = useState<Gender>((params.gender as Gender) || null);
   
   // Date Picker State
-  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(params.dateOfBirth ? new Date(params.dateOfBirth) : null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
   // Validation State
   const [emailError, setEmailError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const getInitial = () => {
     if (fullName.trim().length > 0) {
@@ -73,22 +85,70 @@ export default function CompleteProfileScreen() {
     return `${day}-${month}-${year}`;
   };
 
-  const handleSaveAndContinue = () => {
+  const handleSaveAndContinue = async () => {
     if (!validateEmail()) {
       return;
     }
+    if (!fullName.trim() || !gender || !dateOfBirth) {
+      Alert.alert("Missing Fields", "Please complete all fields.");
+      return;
+    }
     
-    // In a real app, you would send this to the backend to create the profile.
-    console.log('Profile saved:', { fullName, email, gender, dateOfBirth });
-    
-    // Update the local authStore with the new user details
-    updateUser({
-      fullName: fullName.trim() || 'Guest User',
-      email: email.trim() || 'guest@example.com'
-    });
-    
-    // Navigate to the success screen
-    router.replace('/(auth)/account-ready');
+    try {
+      setIsLoading(true);
+      
+      const authState = useAuthStore.getState();
+      const userId = authState.user?.id;
+      const currentRefreshToken = authState.refreshToken;
+      
+      if (!userId || !currentRefreshToken) {
+        Alert.alert("Error", "Authentication session invalid.");
+        return;
+      }
+      
+      const dobString = dateOfBirth.toISOString().split('T')[0];
+      
+      const payload = {
+        name: fullName.trim(),
+        email: email.trim(),
+        gender: gender.toLowerCase(),
+        dateOfBirth: dobString
+      };
+      
+      // Update profile
+      await customerService.updateProfile(userId, payload);
+      
+      // Refresh token to get updated claims
+      const refreshRes = await authService.refreshToken(currentRefreshToken);
+      
+      if (refreshRes && refreshRes.success && refreshRes.accessToken) {
+        // The endpoint may return isProfileCompleted: true now.
+        // Update local store with new tokens and updated user object.
+        authState.setAuthData(
+          refreshRes.accessToken,
+          refreshRes.refreshToken || currentRefreshToken,
+          {
+            ...authState.user!,
+            name: payload.name,
+            email: payload.email,
+            gender: payload.gender,
+            dateOfBirth: payload.dateOfBirth,
+            isProfileCompleted: true
+          },
+          authState.role,
+          authState.isNewUser
+        );
+        
+        router.replace('/(auth)/account-ready');
+      } else {
+        throw new Error("Failed to refresh session");
+      }
+      
+    } catch (e: any) {
+      Alert.alert("Error", e.response?.data?.message || e.message || "Failed to update profile.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -145,10 +205,10 @@ export default function CompleteProfileScreen() {
             {/* Email Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputWrapper, emailError ? styles.inputErrorBorder : null]}>
+              <View style={[styles.inputWrapper, emailError ? styles.inputErrorBorder : null, params.email ? { backgroundColor: '#F1F5F9' } : null]}>
                 <MaterialCommunityIcons name="email-outline" size={20} color="#8A94A6" style={styles.inputIcon} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, params.email ? { color: '#8A94A6' } : null]}
                   placeholder="name@example.com"
                   placeholderTextColor="#A0AABF"
                   keyboardType="email-address"
@@ -156,6 +216,7 @@ export default function CompleteProfileScreen() {
                   value={email}
                   onChangeText={handleEmailChange}
                   onBlur={validateEmail}
+                  editable={!params.email}
                 />
               </View>
               {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
@@ -208,11 +269,18 @@ export default function CompleteProfileScreen() {
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           <TouchableOpacity 
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, isLoading && { opacity: 0.7 }]}
             onPress={handleSaveAndContinue}
+            disabled={isLoading}
           >
-            <Text style={styles.primaryBtnText}>Save & Continue</Text>
-            <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Text style={styles.primaryBtnText}>Save & Continue</Text>
+                <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+              </>
+            )}
           </TouchableOpacity>
           
           <Text style={styles.termsText}>

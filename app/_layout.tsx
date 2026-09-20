@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
@@ -32,24 +32,25 @@ export default function RootLayout() {
   const { isAuthenticated, role } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (!appReady) return;
+    if (!navigationState?.key) return; // Ensure Root Layout is mounted
 
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to location flow if not authenticated
-      router.replace('/(auth)/location');
+      setTimeout(() => router.replace('/(auth)/location'), 1);
     } else if (isAuthenticated && inAuthGroup) {
       // Redirect away from auth screens if authenticated
       if (role === 'provider') {
-        router.replace('/(provider)/(tabs)');
+        setTimeout(() => router.replace('/(provider)/(tabs)'), 1);
       } else {
-        router.replace('/(customer)/(tabs)');
+        setTimeout(() => router.replace('/(customer)/(tabs)'), 1);
       }
     }
-  }, [isAuthenticated, segments, role, appReady]);
+  }, [isAuthenticated, segments, role, navigationState]);
 
   useEffect(() => {
     // Simulate loading resources (fonts, etc.)

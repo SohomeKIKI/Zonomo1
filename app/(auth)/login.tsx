@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image } from 'expo-image';
@@ -6,38 +6,67 @@ import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { authService } from '../../services/authService';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const setAuthData = useAuthStore(state => state.setAuthData);
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (phoneNumber.trim().length < 10) return;
-    // Pass role and phone to verify-otp
-    router.push({
-      pathname: '/(auth)/verify-otp',
-      params: { phone: phoneNumber, role: 'customer' }
-    });
+    try {
+      setIsLoading(true);
+      const res = await authService.sendOtp(phoneNumber);
+      if (res && res.success && res.token) {
+        router.push({
+          pathname: '/(auth)/verify-otp',
+          params: { phone: phoneNumber, role: 'customer', token: res.token }
+        });
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      setIsGoogleLoading(true);
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
-      console.log('Google Auth Success:', userInfo);
       
-      // Proceed to complete-profile (in a real app, send token to backend first)
-      router.push('/(auth)/complete-profile');
+      if (userInfo.data?.idToken) {
+         const res = await authService.googleLogin(userInfo.data.idToken);
+         if (res && res.success && res.accessToken) {
+            setAuthData(res.accessToken, res.refreshToken, res.user, 'customer', false);
+            if (!res.isProfileCompleted) {
+              router.push({
+                pathname: '/(auth)/complete-profile',
+                params: { 
+                  name: res.user?.name || '',
+                  email: res.user?.email || '',
+                  dateOfBirth: res.user?.dateOfBirth || '',
+                  gender: res.user?.gender || ''
+                }
+              });
+            } else {
+              router.replace('/(customer)/(tabs)');
+            }
+         }
+      }
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log('User cancelled the login flow');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log('Sign in is in progress already');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log('Play services not available or outdated');
       } else {
-        console.log('Some other error happened:', error);
+        Alert.alert("Google Login Failed", error.message || "An error occurred");
       }
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -85,12 +114,18 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity 
-              style={[styles.primaryBtn, phoneNumber.length < 10 && styles.primaryBtnDisabled]}
+              style={[styles.primaryBtn, (phoneNumber.length < 10 || isLoading) && styles.primaryBtnDisabled]}
               onPress={handleSendCode}
-              disabled={phoneNumber.length < 10}
+              disabled={phoneNumber.length < 10 || isLoading}
             >
-              <Text style={styles.primaryBtnText}>Send Verification Code</Text>
-              <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+              {isLoading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <>
+                  <Text style={styles.primaryBtnText}>Send Verification Code</Text>
+                  <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                </>
+              )}
             </TouchableOpacity>
 
             <View style={styles.dividerContainer}>
@@ -99,9 +134,19 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
-              <FontAwesome5 name="google" size={18} color="#DB4437" />
-              <Text style={styles.googleBtnText}>Continue with Google</Text>
+            <TouchableOpacity 
+               style={styles.googleBtn} 
+               onPress={handleGoogleLogin}
+               disabled={isGoogleLoading}
+            >
+              {isGoogleLoading ? (
+                 <ActivityIndicator color="#0A1C3B" />
+              ) : (
+                 <>
+                   <FontAwesome5 name="google" size={18} color="#DB4437" />
+                   <Text style={styles.googleBtnText}>Continue with Google</Text>
+                 </>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity 

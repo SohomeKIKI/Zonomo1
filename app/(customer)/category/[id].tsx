@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { customerService } from '../../../services/customerService';
 
 // Define Types
 export interface Subcategory {
@@ -335,27 +336,41 @@ export default function CategoryDetailsScreen() {
   
   // Component State
   const [subcategories, setSubcategories] = useState<Subcategory[]>(initialData.subcategories);
-  const [providers, setProviders] = useState<Provider[]>(initialData.providers);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeSubcategoryId, setActiveSubcategoryId] = useState<string>(subcategoryIdStr);
   
   useEffect(() => {
     const newCatIdStr = typeof id === 'string' ? id : 'repairs-and-fixes';
     const newData = categoryData[newCatIdStr] || categoryData['repairs-and-fixes'];
     setSubcategories(newData.subcategories);
-    setProviders(newData.providers);
+    
     if (typeof subcategoryId === 'string' && subcategoryId) {
       setActiveSubcategoryId(subcategoryId);
     } else {
       setActiveSubcategoryId('all');
     }
   }, [id, subcategoryId]);
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setIsLoading(true);
+      try {
+        const fetched = await customerService.getProvidersByCategory(activeSubcategoryId);
+        setProviders(fetched as Provider[]);
+      } catch (e) {
+        console.error("Failed to fetch providers", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProviders();
+  }, [activeSubcategoryId]);
   const [isFilterModalVisible, setFilterModalVisible] = useState(false);
   const [sortBy, setSortBy] = useState<string>('default');
 
   // Derived state for filtered providers
-  let filteredProviders = activeSubcategoryId === 'all' 
-    ? [...providers] 
-    : providers.filter(p => p.serviceId === activeSubcategoryId);
+  let filteredProviders = [...providers];
     
   if (sortBy === 'rating_high') {
     filteredProviders.sort((a, b) => b.rating - a.rating);
@@ -419,10 +434,16 @@ export default function CategoryDetailsScreen() {
 
       {/* Bottom Row: Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.viewProfileBtn}>
+        <TouchableOpacity 
+          style={styles.viewProfileBtn}
+          onPress={() => router.push(`/provider/${item.id}`)}
+        >
           <Text style={styles.viewProfileText}>View Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.bookNowBtn}>
+        <TouchableOpacity 
+          style={styles.bookNowBtn}
+          onPress={() => router.push({ pathname: '/(customer)/booking/book-slot', params: { providerId: item.id } })}
+        >
           <Text style={styles.bookNowText}>Book Now</Text>
         </TouchableOpacity>
       </View>
@@ -478,13 +499,19 @@ export default function CategoryDetailsScreen() {
       </View>
 
       {/* Provider List */}
-      <FlatList
-        data={filteredProviders}
-        keyExtractor={item => item.id}
-        renderItem={renderProvider}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 }}>
+          <ActivityIndicator size="large" color="#0A2540" />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProviders}
+          keyExtractor={item => item.id}
+          renderItem={renderProvider}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Filter Modal */}
       <Modal visible={isFilterModalVisible} animationType="slide" transparent={true} onRequestClose={() => setFilterModalVisible(false)}>

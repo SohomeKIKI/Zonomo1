@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import HorizontalAdsCarousel from '../../../components/HorizontalAdsCarousel';
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
@@ -120,6 +121,9 @@ export default function CustomerHomeScreen() {
           )}
         </View>
 
+        {/* Horizontal Ads Carousel */}
+        <HorizontalAdsCarousel />
+
         {/* Explore Categories Header */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Explore Categories</Text>
@@ -136,8 +140,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/repairs-and-fixes' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-              <Ionicons name="hammer-outline" size={24} color="#1565C0" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="hammer-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Repairs & Fixes</Text>
             <Text style={styles.categorySub}>• Electrician</Text>
@@ -149,8 +153,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/cleaning' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="sparkles-outline" size={24} color="#2E7D32" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="sparkles-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Cleaning</Text>
             <Text style={styles.categorySub}>• Home Cleaning</Text>
@@ -162,8 +166,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/personal-care' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#FCE4EC' }]}>
-              <Ionicons name="cut-outline" size={24} color="#C2185B" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="cut-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Personal Care</Text>
             <Text style={styles.categorySub}>• Salon at Home</Text>
@@ -175,8 +179,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/health-and-wellness' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="fitness-outline" size={24} color="#E65100" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="fitness-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Health & Wellness</Text>
             <Text style={styles.categorySub}>• Physiotherapy</Text>
@@ -188,8 +192,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/care-and-assist' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#F3E5F5' }]}>
-              <Ionicons name="heart-outline" size={24} color="#6A1B9A" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="heart-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Care & Assist</Text>
             <Text style={styles.categorySub}>• Babysitter</Text>
@@ -201,8 +205,8 @@ export default function CustomerHomeScreen() {
             style={styles.categoryCard}
             onPress={() => router.push('/category/relocation' as any)}
           >
-            <View style={[styles.iconContainer, { backgroundColor: '#E0F7FA' }]}>
-              <Ionicons name="cube-outline" size={24} color="#006064" />
+            <View style={[styles.iconContainer, { backgroundColor: '#E1F0F5' }]}>
+              <Ionicons name="cube-outline" size={24} color="#0a7ea4" />
             </View>
             <Text style={styles.categoryName}>Relocation</Text>
             <Text style={styles.categorySub}>• Packers & Movers</Text>
